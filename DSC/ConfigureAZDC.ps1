@@ -1,4 +1,4 @@
-﻿configuration ConfigureAZDC-azonly
+﻿configuration ConfigureAZDC
 {
    param
     (

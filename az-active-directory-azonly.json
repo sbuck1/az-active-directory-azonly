@@ -220,7 +220,7 @@
                         "autoUpgradeMinorVersion": true,
                         "settings": {
                             "ModulesUrl": "[parameters('dscconfigureazactivedirectoryurl')]",
-                            "ConfigurationFunction": "CreateADPDC-azonly.ps1\\CreateADPDC",
+                            "ConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
                             "Properties": {
                                 "DomainName": "[parameters('DomainFQDN')]",
                                 "AdminCreds": {
