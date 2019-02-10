@@ -117,7 +117,9 @@
             "apiVersion": "2018-08-01",
             "name": "[variables('DC1VMNic')]",
             "location": "[parameters('RGLocation')]",
-            "dependsOn": [],
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/availabilitySets', variables('AvailabilitySet'))]"
+            ],
             "properties": {
                 "ipConfigurations": [
                 {
