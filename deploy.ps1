@@ -78,7 +78,7 @@ $deployparms=@{
     "LocalAdminPassword"        = $ConfigFileContent.Settings.Credentials.LocalAdmin.Password
     "DomainAdminUsername"        = $ConfigFileContent.Settings.Credentials.DomainAdmin.Username
     "DomainAdminPassword"        = $ConfigFileContent.Settings.Credentials.DomainAdmin.Password
-    "dscconfigureazactivedirectoryurl"        = "$($GitAssetLocation)DSC/ConfigureAZDC.zip"
+    "dscconfigureazactivedirectoryurl"        = "$($GitAssetLocation)DSC/CreateADPDC.zip"
 }
 
 #Create Variables from the Hashtable
