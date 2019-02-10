@@ -209,7 +209,7 @@
                     "name": "CreateADForest",
                     "type": "extensions",
                     "apiVersion": "2017-03-30",
-                    "location": "[variables('RGLocation')]",
+                    "location": "[parameters('RGLocation')]",
                     "dependsOn": [
                         "[resourceId('Microsoft.Compute/virtualMachines', variables('DC1VMName'))]"
                     ],
