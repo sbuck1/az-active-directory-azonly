@@ -78,7 +78,6 @@ $deployparms=@{
     "LocalAdminPassword"        = $ConfigFileContent.Settings.Credentials.LocalAdmin.Password
     "DomainAdminUsername"        = $ConfigFileContent.Settings.Credentials.DomainAdmin.Username
     "DomainAdminPassword"        = $ConfigFileContent.Settings.Credentials.DomainAdmin.Password
-    "nestedconfigureazactivedirectoryurl"        = "$($GitAssetLocation)nestedtemplates/configure-az-active-directory-azonly.json"
     "dscconfigureazactivedirectoryurl"        = "$($GitAssetLocation)DSC/ConfigureAZDC-azonly.zip"
 }
 
