@@ -1,0 +1,248 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        
+        "BaseRGName": {
+            "type": "string"
+        } ,
+        "RGName": {
+            "type": "string"
+        } ,
+        "RGLocation": {
+            "type": "string"
+        } ,
+        "StorageAccountType": {
+            "type": "string"
+        } ,
+        "VNetName": {
+            "type": "string"
+        } ,
+        "VNetAddress": {
+            "type": "string"
+        } ,
+        "SubnetName": {
+            "type": "string"
+        } ,
+        "SubnetNetworkAddress": {
+            "type": "string"
+        } ,
+        "DC1Name": {
+            "type": "string"
+        } ,
+        "DC1IPAddress": {
+            "type": "string"
+        } ,
+        "DC1VMSize": {
+            "type": "string"
+        } ,
+        "DC1VMSKU": {
+            "type": "string"
+        } ,
+        "LocalAdminUsername": {
+            "type": "string"
+        },
+        "LocalAdminPassword": {
+            "type": "securestring"
+        },
+        "DomainAdminUsername": {
+            "type": "string"
+        },
+        "DomainAdminPassword": {
+            "type": "securestring"
+        },
+        "DomainFQDN": {
+            "type": "string"
+        },
+        "DomainNETBIOS": {
+            "type": "string"
+        },
+        "dscconfigureazactivedirectoryurl": {
+            "type": "string"
+        }
+        
+    },
+    "variables": {
+
+        
+        "DC1VMName": "[concat('vm-',parameters('DC1Name'))]",
+        "DC1VMOSDiskName": "[concat(variables('DC1VMName'),'-OSDisk')]",
+        "DC1VMDataDiskName": "[concat(variables('DC1VMName'),'-Data_01')]",
+        "DC1VMNic": "[concat('nic-',variables('DC1VMName'))]",
+        "AvailabilitySet": "as-dc",
+        "asgName": "asg-dc",
+        "asgRef": "[resourceId('Microsoft.Network/applicationSecurityGroups/', variables('asgName'))]",
+        "storageAccountName": "[uniqueString(resourceGroup().id)]",
+        "vnetRef": "[resourceId(parameters('BaseRGName'), 'Microsoft.Network/virtualNetworks', parameters('VNetName'))]",
+        "subnetRef": "[concat(variables('vnetRef'),'/subnets/', parameters('SubnetName'))]"
+
+    },
+    "resources": [
+        {
+            "apiVersion": "2018-02-01",
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[variables('storageAccountName')]",
+            "location": "[parameters('RGLocation')]",
+            "kind": "Storage",
+            "sku": {
+              "name": "[parameters('storageAccountType')]"
+            }
+        },
+        {
+            "comments": "Application Security Group",
+            "name": "[variables('asgName')]",
+            "type": "Microsoft.Network/applicationSecurityGroups",
+            "apiVersion": "2018-08-01",
+            "location": "[parameters('RGLocation')]",
+            "properties": {}
+        },
+        {
+            "comments": "Availability set",
+            "type": "Microsoft.Compute/availabilitySets",
+            "sku": {
+                "name": "Aligned"
+            },
+            "name": "[variables('AvailabilitySet')]",
+            "apiVersion": "2018-06-01",
+            "location": "[parameters('RGLocation')]",
+            "scale": null,
+            "properties": {
+                "platformUpdateDomainCount": 5,
+                "platformFaultDomainCount": 2
+            },
+            "dependsOn": []
+        },        
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2018-08-01",
+            "name": "[variables('DC1VMNic')]",
+            "location": "[parameters('RGLocation')]",
+            "dependsOn": [],
+            "properties": {
+                "ipConfigurations": [
+                {
+                    "name": "ipconfig1",
+                    "properties": {
+                        "privateIPAllocationMethod": "Static",
+                        "privateIPAddress": "[parameters('DC1IPAddress')]",
+                        "subnet": {
+                            "id": "[variables('subnetRef')]"
+                        },
+                        "applicationSecurityGroups": [
+                            {
+                                "id": "[variables('asgRef')]"
+                            }
+                        ]
+                    }
+                }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[variables('DC1VMName')]",
+            "apiVersion": "2018-10-01",
+            "location": "[parameters('RGLocation')]",
+            "properties": {
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('AvailabilitySet'))]"
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('DC1VMSize')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "MicrosoftWindowsServer",
+                        "offer": "WindowsServer",
+                        "sku": "[parameters('DC1VMSKU')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "osType": "Windows",
+                        "name": "[variables('DC1VMOSDiskName')]",
+                        "createOption": "FromImage",
+                        "caching": "ReadWrite",
+                        "managedDisk": {
+                            "storageAccountType": "[parameters('storageAccountType')]"
+                        },
+                        "diskSizeGB": 127
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "[variables('DC1VMDataDiskName')]",
+                            "caching": "none",
+                            "diskSizeGB": 127,
+                            "lun": 0,
+                            "createOption": "Empty",
+                            "managedDisk": {
+                                "storageAccountType": "[parameters('storageAccountType')]"
+                            }
+                        }
+                    ]
+                },
+                "osProfile": {
+                    "computerName": "[parameters('DC1Name')]",
+                    "adminUsername": "[parameters('DomainAdminUsername')]",
+                    "windowsConfiguration": {
+                        "provisionVMAgent": true,
+                        "enableAutomaticUpdates": true
+                    },
+                    "secrets": [],
+                    "adminPassword": "[parameters('DomainAdminPassword')]"
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('DC1VMNic'))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                      "enabled": true,
+                      "storageUri": "[reference(variables('storageAccountName')).primaryEndpoints.blob]"
+                    }
+                  }
+            },
+            "resources": [
+                {
+                    "name": "CreateADForest",
+                    "type": "extensions",
+                    "apiVersion": "2017-03-30",
+                    "location": "[variables('RGLocation')]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Compute/virtualMachines', variables('DC1VMName'))]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Powershell",
+                        "type": "DSC",
+                        "typeHandlerVersion": "2.76",
+                        "autoUpgradeMinorVersion": true,
+                        "settings": {
+                            "ModulesUrl": "[parameters('dscconfigureazactivedirectoryurl')]",
+                            "ConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
+                            "Properties": {
+                                "DomainName": "[parameters('DomainFQDN')]",
+                                "AdminCreds": {
+                                    "UserName": "[parameters('DomainAdminUsername')]",
+                                    "Password": "PrivateSettingsRef:AdminPassword"
+                                }
+                            }
+                        },
+                        "protectedSettings": {
+                            "Items": {
+                                "AdminPassword": "[parameters('DomainAdminPassword')]"
+                            }
+                        }
+                    }
+                }
+            ],
+            "dependsOn": [
+                "[resourceId('Microsoft.Compute/availabilitySets', variables('AvailabilitySet'))]",
+                "[resourceId('Microsoft.Network/networkInterfaces', variables('DC1VMNic'))]",
+                "[variables('storageAccountName')]"
+            ]
+        }
+        
+    ]
+}
