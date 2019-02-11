@@ -9,7 +9,7 @@ Write-Host "Beginning deployment at $starttime"
 #END BASIC VARIABLES
 
 Import-Module Azure -ErrorAction SilentlyContinue
-Import-Module C:\Dev\PS_Modules\DS_PowerShell_Function_Library.psm1
+Import-Module C:\Dev\!ps-modules\DS_PowerShell_Function_Library.psm1
 
 #DEPLOYMENT OPTIONS
 
